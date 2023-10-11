@@ -28,25 +28,29 @@ namespace RecipeUnitTests
         [TestMethod]
         public void GetRecipesByIngredient_ValidName_ReturnsRecipesWithIngredient()
         {
-            // arrange
+            // Arrange
+            BusinessLogicLayer bll = _initializeBusinessLogic(); 
+            string ingredientName = "Tomatoes"; 
 
+            // Act
+            List<Recipe> recipes = bll.GetRecipesByIngredient(ingredientName);
 
-            // act
-
-
-            // assert
+            // Assert
+            Assert.IsTrue(recipes != null && recipes.Count > 0);
 
         }
         [TestMethod]
         public void GetRecipesByIngredient_InvalidId_ReturnsNull()
         {
-            // arrange
+            // Arrange
+            BusinessLogicLayer repository = _initializeBusinessLogic(); 
+            string invalidIngredientName = "Salad"; 
 
+            // Act
+            List<Recipe> recipes = repository.GetRecipesByIngredient(invalidIngredientName); 
 
-            // act
-
-
-            // assert
+            // Assert
+            Assert.IsNull(recipes);
         }
 
         [TestMethod]

@@ -1,4 +1,5 @@
-﻿using UnitTestingA1Base.Models;
+﻿using SendGrid.Helpers.Errors.Model;
+using UnitTestingA1Base.Models;
 
 namespace UnitTestingA1Base.Data
 {
@@ -27,7 +28,7 @@ namespace UnitTestingA1Base.Data
             return recipes;
         }
 
-        public HashSet<Recipe> GetRecipesByDiet(int? id, string name)
+        public HashSet<Recipe> GetRecipesByDiet(int? id, string? name)
         {
             HashSet<Recipe> recipes = new HashSet<Recipe>();
 
@@ -53,12 +54,80 @@ namespace UnitTestingA1Base.Data
             return recipes;
         }
 
+
         internal HashSet<Recipe> GetRecipes(int id, string name)
         {
             throw new NotImplementedException();
         }
 
         public HashSet<Recipe> GetRecipes(object value, string validCriteria)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteIngredient(int? id, string? name)
+        {
+            if (id == null && string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Either ID or Name must be provided.");
+            }
+
+            Ingredient ingredientToDelete = FindIngredient(id, name);
+
+            if (ingredientToDelete == null)
+            {
+                throw new ArgumentException("Ingredient not found.");
+            }
+
+            List<RecipeIngredient> associatedRecipes = _appStorage.RecipeIngredients
+                .Where(ri => ri.IngredientId == ingredientToDelete.Id)
+                .ToList();
+
+            if (associatedRecipes.Count > 1)
+            {
+                throw new ForbiddenException("Multiple recipes use this ingredient. Cannot delete.");
+            }
+            else if (associatedRecipes.Count == 1)
+            {
+                int recipeId = associatedRecipes[0].RecipeId;
+
+                // Remove the associated recipe and recipe ingredient
+                RemoveRecipeAndRecipeIngredient(recipeId);
+            }
+
+            _appStorage.Ingredients.Remove(ingredientToDelete);
+        }
+
+
+        private Ingredient FindIngredient(int? id, string? name)
+{
+    return id != null
+        ? _appStorage.Ingredients.FirstOrDefault(i => i.Id == id)
+        : _appStorage.Ingredients.FirstOrDefault(i => i.Name.Contains(name));
+}
+
+private void RemoveRecipeAndRecipeIngredient(int recipeId)
+{
+    Recipe recipeToRemove = _appStorage.Recipes.FirstOrDefault(r => r.Id == recipeId);
+    RecipeIngredient recipeIngredientToRemove = _appStorage.RecipeIngredients.FirstOrDefault(ri => ri.RecipeId == recipeId);
+
+    if (recipeToRemove != null)
+    {
+        _appStorage.Recipes.Remove(recipeToRemove);
+    }
+
+    if (recipeIngredientToRemove != null)
+    {
+        _appStorage.RecipeIngredients.Remove(recipeIngredientToRemove);
+    }
+}
+
+        internal void DeleteRecipe(int? id, string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Recipe> GetRecipesByIngredient(string ingredientName)
         {
             throw new NotImplementedException();
         }
