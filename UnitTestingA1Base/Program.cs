@@ -10,9 +10,7 @@ app.UseHttpsRedirection();
 
 // Application Storage persists for single session
 AppStorage appStorage = new AppStorage();
-
-
-
+BusinessLogicLayer bll = new BusinessLogicLayer(appStorage);    
 #endregion
 
 
@@ -33,9 +31,16 @@ AppStorage appStorage = new AppStorage();
 ///<summary>
 /// Returns a HashSet of all Recipes that contain the specified Ingredient by name or Primary Key
 /// </summary>
-app.MapGet("/recipes/byIngredient", (string name, int id) =>
+app.MapGet("/recipes/byIngredient", (string? name, int? id) =>
 {
-
+    try 
+    {
+        HashSet<Recipe> recipes = bll.GetRecipesByIngredient(id, name);
+        return Results.Ok(recipes);
+    } catch(Exception ex)
+    {
+        return Results.NotFound();
+    }
 });
 
 ///<summary>
@@ -49,10 +54,23 @@ app.MapGet("/recipes/byDiet", (string name, int id) =>
 ///<summary>
 ///Returns a HashSet of all recipes by either Name or Primary Key. 
 /// </summary>
-app.MapGet("/recipes", (string name, int id) =>
+app.MapGet("/recipes/byDiet", (string name, int id) =>
 {
-
+    try
+    {
+        HashSet<Recipe> recipes = bll.GetRecipesByDiet(id, name);
+        if (recipes.Count == 0)
+        {
+            return Results.NotFound("No recipes found for the provided dietary restriction.");
+        }
+        return Results.Ok(recipes);
+    }
+    catch (Exception ex)
+    {
+        return Results.NotFound();
+    }
 });
+
 
 ///<summary>
 /// Receives a JSON object which should contain a Recipe and Ingredients
@@ -67,9 +85,23 @@ app.MapGet("/recipes", (string name, int id) =>
 /// 
 /// All IDs should be created for these objects using the returned value of the AppStorage.GeneratePrimaryKey() method
 /// </summary>
-app.MapPost("/recipes", () => {
-
+app.MapGet("/recipes", (string name, int id) =>
+{
+    try
+    {
+        HashSet<Recipe> recipes = bll.GetRecipes(id, name);
+        if (recipes.Count == 0)
+        {
+            return Results.NotFound("No recipes found for the provided criteria.");
+        }
+        return Results.Ok(recipes);
+    }
+    catch (Exception ex)
+    {
+        return Results.NotFound();
+    }
 });
+
 
 ///<summary>
 /// Deletes an ingredient from the database. 
